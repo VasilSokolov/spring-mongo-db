@@ -17,7 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  * To use this class its need dependency:
 	compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
  */
-public final class DataMap implements Serializable {
+public class DataMap implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

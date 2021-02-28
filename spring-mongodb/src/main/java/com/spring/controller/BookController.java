@@ -43,9 +43,9 @@ public class BookController {
 	}
 
 	@PostMapping("/add")
-	public String save(@RequestBody Book book) {
+	public Book save(@RequestBody Book book) {
 		Book bookSaved = null;
-		BookDto bb = transform(book);
+//		BookDto bb = transform(book);
 		if (book.getBookId() != null) {
 			Book b = bookRepository.findByBookId(book.getBookId()).size() > 0 ? bookRepository.findByBookId(book.getBookId()).get(0) : null;;
 			if (b != null) {
@@ -59,7 +59,7 @@ public class BookController {
 			bookSaved = bookRepository.save(book);
 		}
 		
-		return bookSaved.toString();
+		return bookSaved;
 	}
 
 	@GetMapping("/all")
@@ -94,7 +94,7 @@ public class BookController {
 		return response;
 	}
 	
-	public ExampleMatcher macherExample() {
+	private ExampleMatcher macherExample() {
 		ExampleMatcher matcher = ExampleMatcher.matchingAny().withIgnoreCase().withMatcher("authorName", GenericPropertyMatcher.of(StringMatcher.ENDING));
 		return matcher;
 	}
