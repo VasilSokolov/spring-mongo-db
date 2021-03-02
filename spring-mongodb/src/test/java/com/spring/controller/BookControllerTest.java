@@ -10,9 +10,9 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.MockedStatic;
 import org.mockito.MockedStatic.Verification;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -66,15 +66,16 @@ class BookControllerTest {
 
 	@Test
 	void save() {
-		doReturn(books).when(bookRepository).findByBookId(book.getBookId());
-		doReturn(book).when(bookRepository).save(book);
-//		when(bookRepository.save(book)).thenReturn(book);
-//		Book b = bookRepository.findByBookId(book.getBookId()).size() > 0 ? bookRepository.findByBookId(book.getBookId()).get(0) : null;;
-		
-		Book response = bookController.save(book);
-		
+		doReturn(books).when(bookRepository).findByBookId(anyLong());
+		Book updatedBook = books.get(0);
+		updatedBook.setAuthorName(book.getAuthorName());
+		updatedBook.setBookName(book.getBookName());
+		doReturn(updatedBook).when(bookRepository).save(updatedBook);
 
-		assertEquals(book, response);
+//		doReturn(null).when(bookRepository).findByBookId(anyLong());
+		Book response = bookController.save(book);
+
+		Mockito.verify(bookRepository).save(response);
 	}
 
 	@Test
