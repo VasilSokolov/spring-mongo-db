@@ -47,7 +47,7 @@ public class BookController {
 		Book bookSaved = null;
 //		BookDto bb = transform(book);
 		if (book.getBookId() != null) {
-			Book b = bookRepository.findByBookId(book.getBookId()).size() > 0 ? bookRepository.findByBookId(book.getBookId()).get(0) : null;;
+			Book b = bookRepository.findByBookId(book.getBookId()).size() > 0 ? bookRepository.findByBookId(book.getBookId()).get(0) : null;
 			if (b != null) {
 				b.setAuthorName(book.getAuthorName());
 				b.setBookName(book.getBookName());

@@ -36,7 +36,7 @@ class BookControllerTest {
 //  @Rule
 //	public MockitoRule rule = MockitoJUnit.rule();
 	
-	BookRepository bookRepository = mock(BookRepository.class);
+	BookRepository bookRepository = mock(BookRepository.class, withSettings().verboseLogging());
 
 //	@Spy
 //	DataMap dataMap = new DataMap();
@@ -66,16 +66,35 @@ class BookControllerTest {
 
 	@Test
 	void save() {
+		//Arrange
 		doReturn(books).when(bookRepository).findByBookId(anyLong());
 		Book updatedBook = books.get(0);
 		updatedBook.setAuthorName(book.getAuthorName());
 		updatedBook.setBookName(book.getBookName());
-		doReturn(updatedBook).when(bookRepository).save(updatedBook);
-
-//		doReturn(null).when(bookRepository).findByBookId(anyLong());
+		when(bookRepository.save(updatedBook)).thenReturn(updatedBook);
+		//Act
 		Book response = bookController.save(book);
-
 		Mockito.verify(bookRepository).save(response);
+		assertEquals(response, updatedBook);
+		
+		//Act
+		updatedBook.setBookId(null);
+//		Book book2 = updatedBook;
+		when(bookRepository.save(updatedBook)).thenReturn(updatedBook);
+		Book response2 = bookController.save(updatedBook);
+//		//Assert
+		System.out.println("------------------------------------------------------");
+		Mockito.verify(bookRepository, times(2)).save(response2);
+		assertEquals(response2, updatedBook);
+		
+		when(bookRepository.save(updatedBook)).thenReturn(nullable(Book.class));
+		Book response3 = bookController.save(updatedBook);
+//		//Assert
+		System.out.println("------------------------------------------------------");
+		Mockito.verify(bookRepository, times(2)).save(response3);
+		assertEquals(response3, updatedBook);
+		
+		
 	}
 
 	@Test
