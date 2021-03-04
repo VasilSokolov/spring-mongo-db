@@ -2,6 +2,7 @@ package com.spring.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -91,8 +92,8 @@ class BookControllerTest {
 		Book response3 = bookController.save(updatedBook);
 //		//Assert
 		System.out.println("------------------------------------------------------");
-		Mockito.verify(bookRepository, times(2)).save(response3);
-		assertEquals(response3, updatedBook);
+		Mockito.verify(bookRepository, times(3)).save(updatedBook);
+		assertNull(response3);
 		
 		
 	}
