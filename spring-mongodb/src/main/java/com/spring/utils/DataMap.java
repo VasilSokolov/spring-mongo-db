@@ -5,12 +5,13 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /*
@@ -18,7 +19,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 	compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
  */
 public class DataMap implements Serializable {
-
+	
+	private final static Logger logger = Logger.getLogger(DataMap.class.getName());
+	
 	private static final long serialVersionUID = 1L;
 
 	private static DataMap instance = new DataMap();
@@ -46,7 +49,7 @@ public class DataMap implements Serializable {
 				}
 			}
 		} else {
-//          Logger.log("Creating new DataMap with a 'null' JSON data string."
+			logger.log(Level.INFO, "Creating new DataMap with a 'null' JSON data string.");
 		}
 	}
 

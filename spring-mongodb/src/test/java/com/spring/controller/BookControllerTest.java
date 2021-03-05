@@ -1,26 +1,21 @@
 package com.spring.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.*;
+import com.spring.dto.BookDto;
+import com.spring.model.Book;
+import com.spring.repository.BookRepository;
+import com.spring.utils.DataMap;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.MockedStatic.Verification;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import com.spring.dto.BookDto;
-import com.spring.model.Book;
-import com.spring.repository.BookRepository;
-import com.spring.utils.DataMap;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.*;
 
 //@RunWith(SpringRunner.class)
 //@SpringBootTest
@@ -101,12 +96,11 @@ class BookControllerTest {
 	@Test
 	void transform() {
 		try(MockedStatic<DataMap> mockedStatic = mockStatic(DataMap.class)){
-		
-		mockedStatic.when((Verification) dataMap.dataToEntityOrDto(book, BookDto.class)).thenReturn(bookDto);
+		mockedStatic.when(()-> DataMap.dataToEntityOrDto(book, BookDto.class)).thenReturn(bookDto);
 		BookDto bDto = bookController.transform(book);
 		String authorName = bDto.getAuthorName();
 		String authorName1 = this.bookDto.getAuthorName();
-//		verify(dataMap).dataToEntityOrDto(book, BookDto.class);
+		mockedStatic.verify(()-> DataMap.dataToEntityOrDto(book, BookDto.class));
 		assertEquals(authorName1, authorName);
 		}
 	}
