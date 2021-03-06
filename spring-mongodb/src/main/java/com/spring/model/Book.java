@@ -27,7 +27,7 @@ public class Book {
     private String authorName;
 
     private List<String> categories = new ArrayList<String>();
-    private List<Address> addressList = new ArrayList<>();
+    private List<Address> addressList = new ArrayList<Address>();
 
     public Book() {
         super();
