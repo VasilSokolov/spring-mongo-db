@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -166,10 +168,20 @@ public class BookController {
 		return findAllByOrderByBookIdAsc;
 	}
 
-	@RequestMapping(value = "/export_data")
+	@RequestMapping(value = "/export_data", produces = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public void downloadDataInCsv(HttpServletRequest request, HttpServletResponse response) throws IOException {
 //	    if (type.equals(FileType.CSV.name())) {
 		List<Book> list = bookRepository.findAllByOrderByBookIdAsc();
+		int size = list.size();
+		int c = size/3;
+//		if (count == 3) {
+//			writer.close();
+//			count = 0;
+//			printWriter = response.getWriter();
+//			// the Unicode value for UTF-8 BOM
+//			printWriter.write("\ufeff");
+//			downloadCsv(request, null, books);
+//		}
 		downloadCsv(request, response, list);
 //	    }
 	}
@@ -238,8 +250,11 @@ public class BookController {
 
 	private static final String[] CSV_HEADER = new String[] { "Book Id", "Book Name", "Author Name" };
 
+	private int count=0;
 	private void downloadCsv(HttpServletRequest request, HttpServletResponse response, List<Book> list)
 			throws IOException {
+			
+		
 		String headerKey = "Content-Disposition";
 		SimpleDateFormat filenameDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String fileName = filenameDateFormat.format(new Date()) + ZonedDateTime.now().toInstant().toEpochMilli()
@@ -249,16 +264,21 @@ public class BookController {
 		response.setContentType("text/csv");
 		response.setCharacterEncoding("UTF-8");
 		response.setHeader(headerKey, headerValue);
-
+		
 		PrintWriter printWriter = response.getWriter();
 		// the Unicode value for UTF-8 BOM
 		printWriter.write("\ufeff");
 		try (final CSVWriter writer = new CSVWriter(printWriter, ';')) {
 			writer.writeNext(CSV_HEADER);
 
+//			List<Book> books = new ArrayList<Book>(list);
 			for (Book book : list) {
+//				count++;
 				// cast/convert to String where needed
 				writer.writeNext(new String[] { book.getBookId() + "", book.getBookName(), book.getAuthorName() });
+
+//				books.remove(book);
+				
 			}
 			writer.close();
 		}
