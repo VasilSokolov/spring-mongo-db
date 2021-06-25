@@ -1,12 +1,7 @@
 package com.spring.controller;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -19,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,22 +42,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.io.CsvListWriter;
-import org.supercsv.prefs.CsvPreference;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriter;
 import com.spring.dto.BookDto;
 import com.spring.model.Book;
 import com.spring.repository.BookRepository;
 import com.spring.utils.DataMap;
+import com.spring.utils.MultipleCSV;
+import com.spring.utils.ZipDir;
 
 @RestController()
 @RequestMapping("book")
 public class BookController {
+
+	private final static Logger logger = Logger.getLogger(BookController.class.getName());
 
 	@Autowired
 	private BookRepository bookRepository;
@@ -186,22 +180,30 @@ public class BookController {
 //	    }
 	}
 
+	public static int maxRecords = 5;
+
+	@RequestMapping(value = "/export_mutiple_data")
+	public void downloadDataInCsvFiles(HttpServletResponse response) throws IOException {
+//	    if (type.equals(FileType.CSV.name())) {
+		List<Book> list = bookRepository.findAllByOrderByBookIdAsc();
+		MultipleCSV m = new MultipleCSV();
+		String zipDir = m.directory;
+		m.multipleCSV(list, maxRecords);
+		ZipDir.zipDir(zipDir);
+//	    }
+	}
+
 	@GetMapping(value = "/download", produces = "text/csv; charset=UTF-8")
 	public ResponseEntity<byte[]> getFile() throws IOException {
 		SimpleDateFormat filenameDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String fileName = filenameDateFormat.format(new Date()) + "-" + ZonedDateTime.now().toInstant().toEpochMilli()
 				+ ".csv";
-		String headerValue = String.format("%s; charset=UTF-8; filename=%s", "attachment", fileName);
-		byte[] byteArray = IOUtils.toByteArray(new InputStreamReader(load()), StandardCharsets.UTF_8);
+		String headerValue = String.format("%s; filename=%s", "attachment", fileName);
+
+		List<Book> list = bookRepository.findAllByOrderByBookIdAsc();
+		byte[] byteArray = IOUtils.toByteArray(new InputStreamReader(listToCSV(list)), StandardCharsets.UTF_8);
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
 				.header(HttpHeaders.CONTENT_DISPOSITION, headerValue).body(byteArray);
-	}
-
-	public ByteArrayInputStream load() {
-		List<Book> list = bookRepository.findAllByOrderByBookIdAsc();
-
-		ByteArrayInputStream in = listToCSV(list);
-		return in;
 	}
 
 	private ByteArrayInputStream listToCSV(List<Book> list) {
@@ -213,9 +215,6 @@ public class BookController {
 		try (CSVPrinter csvPrinter = new CSVPrinter((printWriter), format);) {
 			csvPrinter.printRecord(CSV_HEADER);
 			for (Book book : list) {
-				String[] s = new String[] { String.valueOf(book.getBookId()), book.getBookName(),
-						book.getAuthorName() };
-
 				List<String> data = Arrays.asList(book.getBookId() != null ? book.getBookId() + "" : "",
 						book.getBookName(), book.getAuthorName());
 
@@ -268,7 +267,8 @@ public class BookController {
 		PrintWriter printWriter = response.getWriter();
 		// the Unicode value for UTF-8 BOM
 		printWriter.write("\ufeff");
-		try (final CSVWriter writer = new CSVWriter(printWriter, ';')) {
+		try {
+			final CSVWriter writer = new CSVWriter(printWriter, ';');
 			writer.writeNext(CSV_HEADER);
 
 //			List<Book> books = new ArrayList<Book>(list);
@@ -281,50 +281,9 @@ public class BookController {
 				
 			}
 			writer.close();
+		} catch (Exception e) {
+
 		}
 	}
 
-	// original
-	public static String addTimestampColumnFromCsvFile(String timeStr, String inputPath, String outputPath,
-			List<Book> bookList) throws JsonGenerationException, JsonMappingException, IOException {
-
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		final ObjectMapper mapper = new ObjectMapper();
-
-		mapper.writeValue(out, bookList);
-
-		ObjectMapper objectMapper = new ObjectMapper();
-//		String[] jsonObjectAsArray = objectMapper.writeValueAsString(bookList).replace("{", "").replace("}", "").split(";\"");
-		String jsonObjectAsArray = objectMapper.writeValueAsString(bookList);
-//        CsvMapWriter csvWriter = getCsvWritter(fullFilePath);
-//        byte[] bytee = "{ \"name\" : \"John\", \"age\" : 18 }".getBytes(StandardCharsets.UTF_8);
-		byte[] blobData = jsonObjectAsArray.getBytes(StandardCharsets.UTF_8);
-		InputStream is = new ByteArrayInputStream(blobData);
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
-		File inputFile = new File(inputPath);
-		File outputFile = new File(outputPath);
-		CsvListReader reader = null;
-		CsvListWriter writer = null;
-		try {
-			CsvPreference csvPreference = new CsvPreference.Builder('"', ',', "\r\n").ignoreEmptyLines(false).build();
-			reader = new CsvListReader(new FileReader(inputFile), csvPreference);
-			writer = new CsvListWriter(new FileWriter(outputFile), csvPreference);
-			List<String> columns;
-			while ((columns = reader.read()) != null) {
-				columns.add(timeStr);
-				writer.write(columns);
-			}
-		} catch (IOException e) {
-//		  throw new MetatronException("Fail to transform csv file :" + e.getMessage());
-		} finally {
-			try {
-				if (reader != null)
-					reader.close();
-				if (writer != null)
-					writer.close();
-			} catch (IOException e) {
-			}
-		}
-		return outputFile.getAbsolutePath();
-	}
 }
